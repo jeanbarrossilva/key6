@@ -16,6 +16,29 @@
 # this program. If not, see https://www.gnu.org/licenses.
 #
 
-[workspace]
-members = ['keychain']
-resolver = '1'
+chain_width = 80
+comment_width = 80
+doc_comment_code_block_width = 80
+error_on_line_overflow = true
+error_on_unformatted = true
+force_multiline_blocks = true
+format_code_in_doc_comments = true
+format_macro_bodies = true
+format_macro_matchers = true
+format_strings = true
+imports_granularity = 'Item'
+imports_layout = 'HorizontalVertical'
+max_width = 80
+match_arm_blocks = false
+match_arm_leading_pipes = 'Always'
+normalize_comments = true
+normalize_doc_attributes = true
+overflow_delimited_expr = true
+reorder_impl_items = true
+tab_spaces = 2
+trailing_comma = 'Never'
+trailing_semicolon = false
+unstable_features = true
+use_field_init_shorthand = true
+use_try_shorthand = true
+wrap_comments = true

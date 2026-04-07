@@ -16,6 +16,10 @@
 # this program. If not, see https://www.gnu.org/licenses.
 #
 
-[workspace]
-members = ['keychain']
-resolver = '1'
+[package]
+name = 'keychain'
+edition = '2024'
+
+[dependencies.uuid]
+version = '1.23.0'
+features = ['v4']
