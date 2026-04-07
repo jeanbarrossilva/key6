@@ -1,4 +1,3 @@
-//
 // Copyright © Jean Silva
 //
 // This file is part of the key6 open-source project.
