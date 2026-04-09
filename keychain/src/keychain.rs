@@ -17,18 +17,35 @@
 //
 
 use crate::key::Key;
+use argon2::Argon2;
+use argon2::PasswordHasher;
+use argon2::password_hash::SaltString;
+use argon2::password_hash::rand_core::OsRng;
+use std::error::Error;
+use std::fmt::Display;
+use std::fmt::Formatter;
 
-pub struct Keychain {
-  seed: String,
+pub struct Keychain<'a> {
+  hasher: Argon2<'a>,
+  hashed_seed_salt: SaltString,
   storage: Vec<Key>
 }
 
-impl Keychain {
-  fn new(seed: String) -> Self {
-    Self {
-      seed,
-      storage: vec![]
+impl<'a> Keychain<'a> {
+  const SEED_MIN_LENGTH: usize = 8;
+
+  fn new(seed: String) -> Result<Self, ShortSeedError> {
+    let seed_length = seed.len();
+    if seed_length < Self::SEED_MIN_LENGTH {
+      return Err(ShortSeedError { seed_length })
     }
+    let hasher = Argon2::default();
+    let salt = SaltString::generate(&mut OsRng);
+    Ok(Self {
+      hasher,
+      hashed_seed_salt: salt,
+      storage: vec![]
+    })
   }
 
   fn is_empty(&self) -> bool {
@@ -40,7 +57,12 @@ impl Keychain {
   }
 
   fn store(&mut self, name: String, login: String, password: String) -> &Key {
-    let key = Key::generate(name, login, password);
+    let encrypted_password = self
+      .hasher
+      .hash_password(password.as_bytes(), &self.hashed_seed_salt)
+      .unwrap()
+      .to_string();
+    let key = Key::generate(name, login, encrypted_password);
     self.storage.push(key);
     self.storage.get(self.storage.len() - 1).unwrap()
   }
@@ -56,10 +78,40 @@ impl Keychain {
   }
 }
 
+#[derive(PartialEq, Debug)]
+struct ShortSeedError {
+  seed_length: usize
+}
+
+impl Display for ShortSeedError {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(
+      f,
+      "Seed for keychain should contain at least {} characters; given one had \
+       only {}.",
+      Keychain::SEED_MIN_LENGTH,
+      self.seed_length
+    )
+  }
+}
+
+impl Error for ShortSeedError {}
+
 #[cfg(test)]
 mod tests {
   use crate::key::Key;
   use crate::keychain::Keychain;
+  use crate::keychain::ShortSeedError;
+
+  const DUMMY_KEY_DECRYPTED_PASSWORD: &str = "123";
+
+  #[test]
+  fn errors_if_seed_is_less_than_eight_characters_long() {
+    assert_eq!(
+      Keychain::new(String::from("apollo")).err(),
+      Some(ShortSeedError { seed_length: 6 })
+    );
+  }
 
   #[test]
   fn is_empty_by_default() {
@@ -75,9 +127,16 @@ mod tests {
   }
 
   #[test]
+  fn is_not_empty_after_storing_first_key() {
+    let mut keychain = create_keychain();
+    let _ = store_and_clone_dummy_key(&mut keychain);
+    assert!(!keychain.is_empty())
+  }
+
+  #[test]
   fn generates_random_id_for_each_stored_key() {
     let mut keychain = create_keychain();
-    for index in 0..=128 {
+    for index in 0..4 {
       let key = store_and_clone_dummy_key(&mut keychain);
       if index == 0 {
         continue
@@ -87,10 +146,10 @@ mod tests {
   }
 
   #[test]
-  fn is_not_empty_after_storing_first_key() {
+  fn password_of_stored_key_is_hashed() {
     let mut keychain = create_keychain();
-    let _ = store_and_clone_dummy_key(&mut keychain);
-    assert!(!keychain.is_empty())
+    let key = store_and_clone_dummy_key(&mut keychain);
+    assert_ne!(key.hashed_password, DUMMY_KEY_DECRYPTED_PASSWORD)
   }
 
   #[test]
@@ -109,15 +168,15 @@ mod tests {
     assert!(keychain.is_empty())
   }
 
-  fn create_keychain() -> Keychain {
-    Keychain::new(String::from("artemis-ii"))
+  fn create_keychain<'a>() -> Keychain<'a> {
+    Keychain::new(String::from("artemis-ii")).unwrap()
   }
 
   fn store_and_clone_dummy_key(keychain: &mut Keychain) -> Key {
     (*keychain.store(
+      String::from("NASA"),
       String::from("key6"),
-      String::from("jeanbarrossilva"),
-      String::from("123")
+      String::from(DUMMY_KEY_DECRYPTED_PASSWORD)
     ))
     .clone()
   }

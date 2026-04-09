@@ -27,7 +27,7 @@ pub struct Key {
   pub id: String,
   pub name: String,
   pub login: String,
-  pub password: String
+  pub hashed_password: String
 }
 
 impl Key {
@@ -35,60 +35,51 @@ impl Key {
     id: String,
     name: String,
     login: String,
-    password: String
-  ) -> Result<Key, InvalidIdentifierFormatError> {
+    encrypted_password: String
+  ) -> Result<Self, UuidV4FormatError> {
     let uuid = Uuid::try_parse(id.as_str());
     if uuid.is_err() {
-      Err(InvalidIdentifierFormatError::new(id))
+      Err(UuidV4FormatError::new(id))
     } else {
-      Ok(Key::new_without_validation(
-        uuid.unwrap().to_string(),
+      Ok(Key {
+        id: uuid.unwrap().to_string(),
         name,
         login,
-        password
-      ))
+        hashed_password: encrypted_password
+      })
     }
   }
 
-  pub fn generate(name: String, login: String, password: String) -> Self {
-    Key::new_without_validation(
-      Uuid::new_v4().to_string(),
-      name,
-      login,
-      password
-    )
-  }
-
-  fn new_without_validation(
-    id: String,
+  pub fn generate(
     name: String,
     login: String,
-    password: String
+    hashed_password: String
   ) -> Self {
+    let id = Uuid::new_v4().to_string();
     Key {
       id,
       name,
       login,
-      password
+      hashed_password
     }
   }
 }
 
 #[derive(Debug)]
-pub struct InvalidIdentifierFormatError {
+pub struct UuidV4FormatError {
   id: String
 }
 
-impl InvalidIdentifierFormatError {
+impl UuidV4FormatError {
   fn new(id: String) -> Self {
     Self { id }
   }
 }
 
-impl Display for InvalidIdentifierFormatError {
+impl Display for UuidV4FormatError {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     write!(f, "{}", self.id)
   }
 }
 
-impl Error for InvalidIdentifierFormatError {}
+impl Error for UuidV4FormatError {}

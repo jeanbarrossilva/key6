@@ -16,7 +16,6 @@
 # this program. If not, see https://www.gnu.org/licenses.
 #
 
-chain_width = 80
 comment_width = 80
 doc_comment_code_block_width = 80
 error_on_line_overflow = true
@@ -26,6 +25,7 @@ format_code_in_doc_comments = true
 format_macro_bodies = true
 format_macro_matchers = true
 format_strings = true
+hex_literal_case = 'Lower'
 imports_granularity = 'Item'
 imports_layout = 'HorizontalVertical'
 max_width = 80

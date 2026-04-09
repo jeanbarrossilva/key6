@@ -20,6 +20,10 @@
 name = 'keychain'
 edition = '2024'
 
+[dependencies.argon2]
+features = ['alloc', 'std']
+version = '0.5.3'
+
 [dependencies.uuid]
-version = '1.23.0'
 features = ['v4']
+version = '1.23.0'
