@@ -103,7 +103,7 @@ mod tests {
   use crate::keychain::Keychain;
   use crate::keychain::ShortSeedError;
 
-  const DUMMY_KEY_DECRYPTED_PASSWORD: &str = "123";
+  const DUMMY_KEY_UNHASHED_PASSWORD: &str = "123";
 
   #[test]
   fn errors_if_seed_is_less_than_eight_characters_long() {
@@ -149,7 +149,7 @@ mod tests {
   fn password_of_stored_key_is_hashed() {
     let mut keychain = create_keychain();
     let key = store_and_clone_dummy_key(&mut keychain);
-    assert_ne!(key.hashed_password, DUMMY_KEY_DECRYPTED_PASSWORD)
+    assert_ne!(key.hashed_password, DUMMY_KEY_UNHASHED_PASSWORD)
   }
 
   #[test]
@@ -176,7 +176,7 @@ mod tests {
     (*keychain.store(
       String::from("NASA"),
       String::from("key6"),
-      String::from(DUMMY_KEY_DECRYPTED_PASSWORD)
+      String::from(DUMMY_KEY_UNHASHED_PASSWORD)
     ))
     .clone()
   }
