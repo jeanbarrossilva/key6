@@ -35,7 +35,7 @@ impl Key {
     id: String,
     name: String,
     login: String,
-    encrypted_password: String
+    hashed_password: String
   ) -> Result<Self, UuidV4FormatError> {
     let uuid = Uuid::try_parse(id.as_str());
     if uuid.is_err() {
@@ -45,7 +45,7 @@ impl Key {
         id: uuid.unwrap().to_string(),
         name,
         login,
-        hashed_password: encrypted_password
+        hashed_password
       })
     }
   }
